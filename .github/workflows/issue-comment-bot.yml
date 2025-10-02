@@ -1,0 +1,36 @@
+name: Issue Comment Bot
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  comment-on-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check issue labels and comment
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const labels = issue.labels.map(label => label.name);
+            const owner = context.repo.owner;
+            let commentBody = '';
+            
+            if (labels.includes('bug')) {
+              commentBody = `Thank you. We will fix it. Best regards, ${owner}.`;
+            } else if (labels.includes('feature')) {
+              commentBody = `Thank you, we will consider to include this feature. Best regards, ${owner}.`;
+            } else if (labels.includes('discussion')) {
+              commentBody = `Happy to discuss this topic with you. Best regards, ${owner}.`;
+            }
+            
+            if (commentBody) {
+              github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: commentBody
+              });
+            }
